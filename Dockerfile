@@ -4,8 +4,7 @@
 # BUILD: docker build --rm -t puckel/docker-airflow .
 # SOURCE: https://github.com/puckel/docker-airflow
 
-FROM debian:jessie
-MAINTAINER Puckel_
+FROM ubuntu:16.04
 
 # Never prompts the user for choices on installation/configuration of packages
 ENV DEBIAN_FRONTEND noninteractive
@@ -23,28 +22,23 @@ ENV LC_CTYPE en_US.UTF-8
 ENV LC_MESSAGES en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 
-RUN set -ex \
-    && buildDeps=' \
-        python-dev \
-        libkrb5-dev \
-        libsasl2-dev \
-        libssl-dev \
-        libffi-dev \
-        build-essential \
-        libblas-dev \
-        liblapack-dev \
-        libpq-dev \
-        git \
-    ' \
-    && apt-get update -yqq \
-    && apt-get install -yqq --no-install-recommends \
-        $buildDeps \
-        python-pip \
-        python-requests \
-        apt-utils \
-        curl \
-        netcat \
-        locales \
+RUN apt-get update && apt-get install -y \
+    python-dev \
+    libkrb5-dev \
+    libsasl2-dev \
+    libssl-dev \
+    libffi-dev \
+    build-essential \
+    libblas-dev \
+    liblapack-dev \
+    libpq-dev \
+    git \
+    python-pip \
+    python-requests \
+    apt-utils \
+    curl \
+    netcat \
+    locales \
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
@@ -52,6 +46,7 @@ RUN set -ex \
     && python -m pip install -U pip \
     && pip install Cython \
     && pip install pytz \
+    && pip install setuptools \
     && pip install pyOpenSSL \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
@@ -69,6 +64,8 @@ RUN set -ex \
 
 COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
+COPY requirements.txt /requirements.txt
+RUN pip install --no-cache-dir -r /requirements.txt
 
 RUN chown -R airflow: ${AIRFLOW_HOME}
 
